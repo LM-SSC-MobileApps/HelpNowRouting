@@ -1,0 +1,54 @@
+#!/bin/bash
+LOGNOW="$(TZ=US/Mountain date +%m/%d/%y\ %H:%M:%S)"
+echo $LOGNOW
+cd /osrm/
+if [ -f download.lock0 ];
+  then
+    echo "An download is in progress. Aborting..."
+    exit 1
+fi
+
+if [ -f region.lock ];
+  then
+    echo "An region update is in progress. Aborting..."
+    exit 1
+fi
+
+touch region.lock
+
+echo "Getting updated region list..."
+wget -O list.new --header="Authorization: Basic BACKENDKEY" http://www.helpnowmap.com/api/eventlocation/boundingbox/list
+
+if cmp -s list.new list.old
+then
+    echo "No region updates to perform. Operation Complete."
+else
+    echo "Region updates required."
+
+    REGIONCNT=0
+
+    while read BBOX
+    do
+        /usr/local/bin/osmconvert planet-latest.osm.pbf -b="$BBOX" -o="region$REGIONCNT.o5m" -v &
+        MERGEARGS[$REGIONCNT]="region$REGIONCNT.o5m"
+        REGIONCNT=$((REGIONCNT+1))
+    done < list.new
+
+    wait
+
+    touch region.lock1
+
+    /usr/local/bin/osmconvert "${MERGEARGS[@]}" -o=region.osm.pbf -v
+    rm -rf "${MERGEARGS[@]}"
+    mv list.new list.old
+    touch blocked_nodes.update
+
+    rm region.lock1
+
+    echo "Complete!"
+fi
+
+rm region.lock
+
+LOGNOW="$(TZ=US/Mountain date +%m/%d/%y\ %H:%M:%S)"
+echo $LOGNOW

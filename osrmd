@@ -1,0 +1,2 @@
+/usr/local/bin/osrm-datastore region.osrm
+/usr/local/bin/osrm-routed --shared-memory=yes
