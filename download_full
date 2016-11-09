@@ -1,0 +1,25 @@
+#!/bin/bash
+cd /osrm/
+if [ -f download.lock1 ];
+  then
+    #echo "An downloading is already in progress. Aborting..."
+    exit 1
+fi
+
+touch download.lock1
+
+LOGNOW="$(TZ=US/Mountain date +%m/%d/%y\ %H:%M:%S)"
+echo "$LOGNOW - Doing full download of planet OSM data..."
+
+wget -O planet-latest-updated.pbf http://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/pbf/planet-latest.osm.pbf
+
+touch download.lock0
+
+mv planet-latest-updated.pbf planet-latest.osm.pbf
+rm list.old
+
+LOGNOW="$(TZ=US/Mountain date +%m/%d/%y\ %H:%M:%S)"
+echo "$LOGNOW - Full planet download complete!"
+
+rm download.lock0
+rm download.lock1

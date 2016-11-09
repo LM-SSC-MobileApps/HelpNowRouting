@@ -1,29 +1,32 @@
 #!/bin/bash
-LOGNOW="$(TZ=US/Mountain date +%m/%d/%y\ %H:%M:%S)"
-echo $LOGNOW
+#LOGNOW="$(TZ=US/Mountain date +%m/%d/%y\ %H:%M:%S)"
+#echo $LOGNOW
 cd /osrm/
 if [ -f download.lock0 ];
   then
-    echo "An download is in progress. Aborting..."
+    #echo "An download is in progress. Aborting..."
     exit 1
 fi
 
 if [ -f region.lock ];
   then
-    echo "An region update is in progress. Aborting..."
+    #echo "An region update is in progress. Aborting..."
     exit 1
 fi
 
+#echo $LOGNOW
 touch region.lock
 
-echo "Getting updated region list..."
+#echo "Getting updated region list..."
 wget -O list.new --header="Authorization: Basic BACKENDKEY" http://www.helpnowmap.com/api/eventlocation/boundingbox/list
 
 if cmp -s list.new list.old
 then
-    echo "No region updates to perform. Operation Complete."
+    :
+    #echo "No region updates to perform. Operation Complete."
 else
-    echo "Region updates required."
+    LOGNOW="$(TZ=US/Mountain date +%m/%d/%y\ %H:%M:%S)"
+    echo "$LOGNOW - Region Update Required. Starting update..."
 
     REGIONCNT=0
 
@@ -36,6 +39,9 @@ else
 
     wait
 
+    LOGNOW="$(TZ=US/Mountain date +%m/%d/%y\ %H:%M:%S)"
+    echo "$LOGNOW - Event regions extracted from planet-wide data. Compressing to single data set."
+
     touch region.lock1
 
     /usr/local/bin/osmconvert "${MERGEARGS[@]}" -o=region.osm.pbf -v
@@ -45,10 +51,9 @@ else
 
     rm region.lock1
 
-    echo "Complete!"
+    LOGNOW="$(TZ=US/Mountain date +%m/%d/%y\ %H:%M:%S)"
+    echo "$LOGNOW - Region Update Complete"
 fi
 
 rm region.lock
-
-LOGNOW="$(TZ=US/Mountain date +%m/%d/%y\ %H:%M:%S)"
-echo $LOGNOW
+                    

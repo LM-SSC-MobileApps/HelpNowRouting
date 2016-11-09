@@ -1,0 +1,5 @@
+#!/bin/bash
+cd /osrm
+mv update.log update.prev.log
+mv region-update.log region-update.prev.log
+mv download.log download.prev.log

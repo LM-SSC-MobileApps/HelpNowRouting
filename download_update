@@ -1,0 +1,31 @@
+#!/bin/bash
+cd /osrm/
+if [ -f download.lock1 ];
+  then
+    #echo "An downloading is already in progress. Aborting..."
+    exit 1
+fi
+
+touch download.lock1
+
+LOGNOW="$(TZ=US/Mountain date +%m/%d/%y\ %H:%M:%S)"
+echo "$LOGNOW - Reading daily changes via osmosis..."
+
+osmosis --read-replication-interval workingDirectory=/osrm/diffs/ --simplify-change --write-xml-change /osrm/changes.osc.gz
+
+LOGNOW="$(TZ=US/Mountain date +%m/%d/%y\ %H:%M:%S)"
+echo "$LOGNOW - Merging daily changes into planet latest."
+
+osmconvert planet-latest.osm.pbf changes.osc.gz -o=planet-latest-updated.pbf
+
+touch download.lock0
+
+mv planet-latest-updated.pbf planet-latest.osm.pbf
+rm changes.osc.gz
+rm list.old
+
+LOGNOW="$(TZ=US/Mountain date +%m/%d/%y\ %H:%M:%S)"
+echo "$LOGNOW - Incremental planet update complete!"
+
+rm download.lock0
+rm download.lock1

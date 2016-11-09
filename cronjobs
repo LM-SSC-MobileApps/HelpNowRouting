@@ -1,0 +1,5 @@
+0 1 * * * /osrm/download_update >> /osrm/download.log
+* * * * * /osrm/region-update >> /osrm/region-update.log
+* * * * * /osrm/update >> /osrm/update.log
+0 0 * * * /osrm/cleanlogs
+
