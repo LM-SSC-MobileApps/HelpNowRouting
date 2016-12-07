@@ -18,7 +18,16 @@ fi
 touch region.lock
 
 #echo "Getting updated region list..."
-wget -O list.new --header="Authorization: Basic BACKENDKEY" http://www.helpnowmap.com/api/eventlocation/boundingbox/list
+wget -O list.new --header="Authorization: Basic YTFhZGE1YWItYjhjMi0xMWU1LTg0N2QtMDBmZmQwZWE5MjcyOkgzbHBOMHcyMDE2" http://HelpNowLB-1559668033.ap-northeast-1.elb.amazonaws.com/api/eventlocation/boundingbox/list
+
+if grep -q Bounds list.new;
+then
+    :
+    #echo "New bounds downloaded"
+else
+    rm region.lock
+    exit 1
+fi
 
 if cmp -s list.new list.old
 then
@@ -32,9 +41,12 @@ else
 
     while read BBOX
     do
-        /usr/local/bin/osmconvert planet-latest.osm.pbf -b="$BBOX" -o="region$REGIONCNT.o5m" -v &
-        MERGEARGS[$REGIONCNT]="region$REGIONCNT.o5m"
-        REGIONCNT=$((REGIONCNT+1))
+        if [ "$BBOX" != "Bounds" ]
+        then
+            /usr/local/bin/osmconvert planet-latest.osm.pbf -b="$BBOX" -o="region$REGIONCNT.o5m" -v &
+            MERGEARGS[$REGIONCNT]="region$REGIONCNT.o5m"
+            REGIONCNT=$((REGIONCNT+1))
+        fi
     done < list.new
 
     wait
@@ -56,4 +68,4 @@ else
 fi
 
 rm region.lock
-                    
+
